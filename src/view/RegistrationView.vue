@@ -150,7 +150,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import api from '../axios';
 
@@ -179,7 +179,20 @@ onMounted(() => {
   if (route.query.package) {
     selectedPackage.value = route.query.package;
   }
+  
+  const savedData = localStorage.getItem('registrationFormData');
+  if (savedData) {
+    try {
+      formData.value = JSON.parse(savedData);
+    } catch (e) {
+      console.error('Failed to parse saved form data', e);
+    }
+  }
 });
+
+watch(formData, (newVal) => {
+  localStorage.setItem('registrationFormData', JSON.stringify(newVal));
+}, { deep: true });
 
 const submitRegistration = async () => {
   isSubmitting.value = true;
@@ -206,6 +219,9 @@ const submitRegistration = async () => {
     
     // Jika berhasil (data masuk ke database), tampilkan modal
     showSuccess.value = true;
+    
+    // Hapus data dari localStorage karena pendaftaran berhasil
+    localStorage.removeItem('registrationFormData');
 
   } catch (error) {
     console.error("Error Detail:", error);
